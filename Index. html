@@ -1,0 +1,951 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blaze Studio</title>
+
+<style>
+:root {
+  --bg: #101116;
+  --panel: #1c1a22;
+  --orange: #ff762e;
+  --line: #38343f;
+  --text: #ffffff;
+  --muted: #aaa6b5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, sans-serif;
+}
+
+header {
+  background: #19161f;
+  padding: 16px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  color: var(--orange);
+  font-size: 22px;
+  font-weight: bold;
+}
+
+main {
+  padding: 12px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-size: 16px;
+  margin-top: 0;
+}
+
+button, input, select, textarea {
+  background: #292631;
+  color: white;
+  border: 1px solid #45414f;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+button {
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--orange);
+  color: #171016;
+  font-weight: bold;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+label {
+  display: block;
+  margin: 8px 0;
+  color: var(--muted);
+}
+
+@media (min-width: 800px) {
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">🔥 BLAZE STUDIO</div>
+  <div class="muted">FREE EDITION</div>
+</header>
+
+<main>
+</main>
+</body>
+</html>
+<!-- BLAZE STUDIO CHUNK 2 -->
+
+<div class="panel">
+  <h2>🎬 Video Preview</h2>
+
+  <video id="videoPreview"
+    controls
+    playsinline
+    style="width:100%;background:#000;border-radius:10px;max-height:350px">
+  </video>
+
+  <div class="actions">
+    <button class="primary"
+      onclick="document.getElementById('videoInput').click()">
+      📁 Import Video
+    </button>
+
+    <input id="videoInput"
+      type="file"
+      accept="video/*"
+      hidden
+      onchange="loadVideo(event)">
+  </div>
+
+  <p id="videoStatus" class="muted">
+    No video imported. Choose a video from your gallery.
+  </p>
+</div>
+
+<script>
+let currentVideo = null;
+
+function loadVideo(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 5 * 1024 * 1024 * 1024) {
+    alert("This video is too large.");
+    return;
+  }
+
+  const video = document.getElementById("videoPreview");
+
+  if (currentVideo) {
+    URL.revokeObjectURL(currentVideo);
+  }
+
+  currentVideo = URL.createObjectURL(file);
+  video.src = currentVideo;
+
+  video.load();
+
+  document.getElementById("videoStatus").textContent =
+    "Imported: " + file.name;
+}
+</script>
+<!-- END CHUNK 2 -->
+<!-- BLAZE STUDIO CHUNK 3 -->
+
+<div class="panel">
+  <h2>✂️ Timeline & Trim</h2>
+
+  <div style="background:#292631;padding:12px;border-radius:10px">
+    <div style="color:#ff762e;font-weight:bold;margin-bottom:10px">
+      VIDEO TRACK
+    </div>
+
+    <input id="trimStart" type="range"
+      min="0" max="100" value="0"
+      style="width:100%">
+
+    <input id="trimEnd" type="range"
+      min="0" max="100" value="100"
+      style="width:100%">
+
+    <p id="trimInfo" class="muted">
+      Start: 0% | End: 100%
+    </p>
+  </div>
+
+  <div class="actions">
+    <button onclick="previewTrim()">▶ Preview Trim</button>
+    <button onclick="resetTrim()">↺ Reset</button>
+  </div>
+</div>
+
+<script>
+const trimStart = document.getElementById("trimStart");
+const trimEnd = document.getElementById("trimEnd");
+const trimInfo = document.getElementById("trimInfo");
+const videoPreview = document.getElementById("videoPreview");
+
+function updateTrimInfo() {
+  let start = Number(trimStart.value);
+  let end = Number(trimEnd.value);
+
+  if (start >= end) {
+    end = start + 1;
+    trimEnd.value = end;
+  }
+
+  trimInfo.textContent =
+    "Start: " + start + "% | End: " + end + "%";
+}
+
+trimStart.addEventListener("input", updateTrimInfo);
+trimEnd.addEventListener("input", updateTrimInfo);
+
+function previewTrim() {
+  if (!videoPreview.duration) {
+    alert("Import a video first.");
+    return;
+  }
+
+  const start = Number(trimStart.value) / 100;
+  const end = Number(trimEnd.value) / 100;
+
+  videoPreview.currentTime = videoPreview.duration * start;
+  videoPreview.play();
+
+  videoPreview.ontimeupdate = function() {
+    if (videoPreview.currentTime >= videoPreview.duration * end) {
+      videoPreview.pause();
+      videoPreview.ontimeupdate = null;
+    }
+  };
+}
+
+function resetTrim() {
+  trimStart.value = 0;
+  trimEnd.value = 100;
+  updateTrimInfo();
+
+  if (videoPreview.duration) {
+    videoPreview.currentTime = 0;
+  }
+}
+</script>
+
+<!-- END CHUNK 3 -->
+<!-- BLAZE STUDIO CHUNK 4 -->
+
+<div class="panel">
+  <h2>📝 Text & Captions</h2>
+
+  <textarea id="captionText"
+    placeholder="Type your text or captions here..."
+    style="width:100%;min-height:80px"></textarea>
+
+  <label>Text Color</label>
+  <input type="color" id="captionColor" value="#ffffff">
+
+  <label>Text Size</label>
+  <input type="range" id="captionSize"
+    min="16" max="60" value="30" style="width:100%">
+
+  <div class="actions">
+    <button class="primary" onclick="showCaption()">
+      Add Text
+    </button>
+    <button onclick="removeCaption()">Remove Text</button>
+  </div>
+
+  <div id="captionPreview"
+    style="background:#000;padding:20px;margin-top:12px;
+    text-align:center;border-radius:8px;
+    min-height:60px;overflow-wrap:anywhere">
+    <span id="captionDisplay"></span>
+  </div>
+</div>
+
+<script>
+function showCaption() {
+  const text = document.getElementById("captionText").value;
+  const color = document.getElementById("captionColor").value;
+  const size = document.getElementById("captionSize").value;
+
+  const display = document.getElementById("captionDisplay");
+
+  display.textContent = text;
+  display.style.color = color;
+  display.style.fontSize = size + "px";
+}
+
+function removeCaption() {
+  document.getElementById("captionDisplay").textContent = "";
+  document.getElementById("captionText").value = "";
+}
+</script>
+
+<!-- END CHUNK 4 -->
+<!-- BLAZE STUDIO CHUNK 5 -->
+
+<div class="panel">
+  <h2>🎵 Music & Audio</h2>
+
+  <label>Import Music or Audio</label>
+  <input type="file" id="audioInput" accept="audio/*"
+    style="width:100%">
+
+  <audio id="audioPreview" controls
+    style="width:100%;margin-top:10px"></audio>
+
+  <hr style="border-color:#38343f;margin:20px 0">
+
+  <h2>🎙️ Voice Recording</h2>
+
+  <div class="actions">
+    <button class="primary" onclick="startRecording()">
+      🔴 Start Recording
+    </button>
+    <button onclick="stopRecording()">
+      ⏹ Stop Recording
+    </button>
+  </div>
+
+  <audio id="recordedAudio" controls
+    style="width:100%;margin-top:12px"></audio>
+
+  <p id="recordStatus" class="muted">
+    Ready to record.
+  </p>
+</div>
+
+<script>
+const audioInput = document.getElementById("audioInput");
+const audioPreview = document.getElementById("audioPreview");
+
+audioInput.addEventListener("change", function() {
+  const file = this.files[0];
+  if (!file) return;
+
+  audioPreview.src = URL.createObjectURL(file);
+});
+
+let recorder;
+let recordedChunks = [];
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true
+    });
+
+    recordedChunks = [];
+
+    recorder = new MediaRecorder(stream);
+
+    recorder.ondataavailable = function(event) {
+      if (event.data.size > 0) {
+        recordedChunks.push(event.data);
+      }
+    };
+
+    recorder.onstop = function() {
+      const blob = new Blob(recordedChunks, {
+        type: recorder.mimeType
+      });
+
+      document.getElementById("recordedAudio").src =
+        URL.createObjectURL(blob);
+
+      stream.getTracks().forEach(track => track.stop());
+
+      document.getElementById("recordStatus").textContent =
+        "Recording finished. Play your voice below.";
+    };
+
+    recorder.start();
+
+    document.getElementById("recordStatus").textContent =
+      "Recording...";
+
+  } catch (error) {
+    alert("Please allow microphone access.");
+  }
+}
+
+function stopRecording() {
+  if (recorder && recorder.state === "recording") {
+    recorder.stop();
+  }
+}
+</script>
+
+<!-- END CHUNK 5 -->
+<!-- BLAZE STUDIO CHUNK 6 -->
+
+<div class="panel">
+  <h2>🤖 AI Voice Studio</h2>
+
+  <textarea id="ttsText"
+    placeholder="Type anything to convert into speech..."
+    style="width:100%;min-height:80px"></textarea>
+
+  <label>Voice</label>
+  <select id="ttsVoice" style="width:100%">
+    <option value="female">Female</option>
+    <option value="male">Male</option>
+  </select>
+
+  <label>Voice Age / Style</label>
+  <select id="ttsAge" style="width:100%">
+    <option value="young">Young</option>
+    <option value="adult" selected>Adult</option>
+    <option value="mature">Mature / Deep</option>
+  </select>
+
+  <label>Emotion</label>
+  <select id="ttsEmotion" style="width:100%">
+    <option value="normal">Normal</option>
+    <option value="happy">Happy</option>
+    <option value="sad">Sad</option>
+    <option value="angry">Angry</option>
+    <option value="excited">Excited</option>
+    <option value="calm">Calm</option>
+  </select>
+
+  <label>Speech Speed</label>
+  <input id="ttsRate" type="range"
+    min="0.5" max="2" step="0.1" value="1"
+    style="width:100%">
+
+  <div class="actions">
+    <button class="primary" onclick="speakText()">▶ Generate Voice</button>
+    <button onclick="stopSpeech()">⏹ Stop</button>
+  </div>
+
+  <p class="muted" id="ttsStatus">
+    Voices available depend on your device and browser.
+  </p>
+</div>
+
+<script>
+function speakText() {
+  const text = document.getElementById("ttsText").value;
+
+  if (!text.trim()) {
+    alert("Enter text first.");
+    return;
+  }
+
+  if (!("speechSynthesis" in window)) {
+    alert("Text-to-speech is not supported in this browser.");
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  const voices = speechSynthesis.getVoices();
+  const gender = document.getElementById("ttsVoice").value;
+  const age = document.getElementById("ttsAge").value;
+  const emotion = document.getElementById("ttsEmotion").value;
+
+  let matchingVoice = voices.find(v => {
+    const name = v.name.toLowerCase();
+    return gender === "female"
+      ? /female|woman|girl/.test(name)
+      : /male|man|boy/.test(name);
+  });
+
+  if (matchingVoice) {
+    utterance.voice = matchingVoice;
+  }
+
+  let pitch = gender === "female" ? 1.2 : 0.8;
+  let rate = Number(document.getElementById("ttsRate").value);
+
+  if (age === "young") {
+    pitch += 0.3;
+    rate += 0.1;
+  }
+
+  if (age === "mature") {
+    pitch -= 0.3;
+    rate -= 0.1;
+  }
+
+  if (emotion === "happy" || emotion === "excited") {
+    pitch += 0.3;
+    rate += 0.2;
+  }
+
+  if (emotion === "sad" || emotion === "calm") {
+    pitch -= 0.2;
+    rate -= 0.2;
+  }
+
+  if (emotion === "angry") {
+    pitch += 0.1;
+    rate += 0.3;
+  }
+
+  utterance.pitch = Math.max(0.1, Math.min(2, pitch));
+  utterance.rate = Math.max(0.1, Math.min(2, rate));
+
+  utterance.onstart = () => {
+    document.getElementById("ttsStatus").textContent =
+      "Speaking...";
+  };
+
+  utterance.onend = () => {
+    document.getElementById("ttsStatus").textContent =
+      "Voice finished.";
+  };
+
+  speechSynthesis.speak(utterance);
+}
+
+function stopSpeech() {
+  speechSynthesis.cancel();
+
+  document.getElementById("ttsStatus").textContent =
+    "Voice stopped.";
+}
+
+speechSynthesis.onvoiceschanged = function() {
+  speechSynthesis.getVoices();
+};
+</script>
+
+<!-- END CHUNK 6 -->
+<!-- BLAZE STUDIO CHUNK 7 -->
+
+<div class="panel">
+  <h2>🎤 Voice-to-Text</h2>
+
+  <p class="muted">
+    Automatically recognize speech and turn it into text.
+  </p>
+
+  <label>Language</label>
+  <select id="sttLanguage" style="width:100%">
+    <option value="en-US">English</option>
+    <option value="en-GB">English (UK)</option>
+    <option value="hi-IN">Hindi</option>
+    <option value="ne-NP">Nepali</option>
+  </select>
+
+  <div class="actions">
+    <button class="primary" onclick="startSTT()">
+      🔴 Start Voice-to-Text
+    </button>
+    <button onclick="stopSTT()">⏹ Stop</button>
+  </div>
+
+  <textarea id="sttOutput"
+    placeholder="Recognized speech will appear here..."
+    style="width:100%;min-height:120px;margin-top:12px"></textarea>
+
+  <div class="actions">
+    <button onclick="copySTT()">Copy Captions</button>
+    <button onclick="sendSTTToCaption()">Use as Video Text</button>
+  </div>
+
+  <p id="sttStatus" class="muted">
+    Ready.
+  </p>
+</div>
+
+<script>
+let recognition;
+
+function startSTT() {
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert("Speech recognition is not supported in this browser.");
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+
+  recognition.lang =
+    document.getElementById("sttLanguage").value;
+
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = function(event) {
+    let finalText = "";
+    let interimText = "";
+
+    for (let i = 0; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+
+      if (event.results[i].isFinal) {
+        finalText += transcript + " ";
+      } else {
+        interimText += transcript;
+      }
+    }
+
+    document.getElementById("sttOutput").value =
+      finalText + interimText;
+  };
+
+  recognition.onerror = function(event) {
+    document.getElementById("sttStatus").textContent =
+      "Error: " + event.error;
+  };
+
+  recognition.onend = function() {
+    document.getElementById("sttStatus").textContent =
+      "Recognition stopped.";
+  };
+
+  recognition.start();
+
+  document.getElementById("sttStatus").textContent =
+    "Listening...";
+}
+
+function stopSTT() {
+  if (recognition) {
+    recognition.stop();
+  }
+}
+
+function copySTT() {
+  const text = document.getElementById("sttOutput").value;
+
+  navigator.clipboard.writeText(text)
+    .then(() => alert("Captions copied!"))
+    .catch(() => alert("Please copy the text manually."));
+}
+
+function sendSTTToCaption() {
+  document.getElementById("captionText").value =
+    document.getElementById("sttOutput").value;
+
+  showCaption();
+}
+</script>
+
+<!-- END CHUNK 7 -->
+<!-- BLAZE STUDIO CHUNK 8 -->
+
+<div class="panel">
+  <h2>🔥 Blaze Studio Editions</h2>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+    <div style="border:1px solid #45414f;padding:12px;border-radius:10px">
+      <h3 style="color:#ff762e">FREE</h3>
+      <h2>$0</h2>
+      <p class="muted">25-minute video limit</p>
+      <p>✓ Video import</p>
+      <p>✓ Basic trimming</p>
+      <p>✓ Text & captions</p>
+      <p>✓ Music preview</p>
+      <p>✓ Voice recording</p>
+      <p>✓ Basic TTS</p>
+    </div>
+
+    <div style="border:1px solid #ff762e;padding:12px;border-radius:10px">
+      <h3 style="color:#ff762e">PREMIUM</h3>
+      <h2>PRO</h2>
+      <p class="muted">Advanced editing</p>
+      <p>✓ AI auto-clipping</p>
+      <p>✓ Advanced effects</p>
+      <p>✓ Professional filters</p>
+      <p>✓ Advanced voice tools</p>
+      <p>✓ More editing tracks</p>
+      <p>✓ Longer video projects</p>
+    </div>
+
+  </div>
+
+  <button class="primary" style="width:100%;margin-top:12px"
+    onclick="showPremiumInfo()">
+    ⭐ Explore Premium
+  </button>
+
+  <p class="muted" id="premiumInfo"></p>
+</div>
+
+<script>
+function showPremiumInfo() {
+  document.getElementById("premiumInfo").textContent =
+    "Premium features are planned. Payments and subscriptions are not yet activated.";
+}
+</script>
+
+<!-- END CHUNK 8 -->
+<!-- BLAZE STUDIO CHUNK 9 -->
+
+<script>
+const originalLoadVideo = loadVideo;
+
+loadVideo = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const video = document.getElementById("videoPreview");
+
+  video.onloadedmetadata = function() {
+    if (video.duration > 25 * 60) {
+      alert(
+        "FREE EDITION LIMIT: Videos longer than 25 minutes are not supported. Upgrade to Premium for longer projects."
+      );
+
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+
+      if (currentVideo) {
+        URL.revokeObjectURL(currentVideo);
+        currentVideo = null;
+      }
+
+      document.getElementById("videoStatus").textContent =
+        "Video rejected: Free Edition limit is 25 minutes.";
+
+      return;
+    }
+
+    document.getElementById("videoStatus").textContent =
+      "Video ready: " + Math.floor(video.duration / 60) +
+      " minutes " + Math.floor(video.duration % 60) +
+      " seconds.";
+  };
+
+  originalLoadVideo(event);
+};
+</script>
+
+<!-- END CHUNK 9 -->
+<!-- BLAZE STUDIO CHUNK 10 -->
+
+<div class="panel">
+  <h2>📤 Export Video</h2>
+
+  <p class="muted">
+    Export your video using your browser's recording feature.
+  </p>
+
+  <label>Export Quality</label>
+  <select id="exportQuality" style="width:100%">
+    <option value="4800000">1080p — High Quality</option>
+    <option value="2500000">720p — Medium Quality</option>
+    <option value="1000000">480p — Low Quality</option>
+  </select>
+
+  <div class="actions">
+    <button class="primary" onclick="startExport()">
+      🔴 Start Export
+    </button>
+
+    <button onclick="stopExport()">
+      ⏹ Stop Export
+    </button>
+  </div>
+
+  <p id="exportStatus" class="muted">
+    Ready to export.
+  </p>
+</div>
+
+<script>
+let exportRecorder;
+let exportStream;
+let exportChunks = [];
+
+function startExport() {
+  const video = document.getElementById("videoPreview");
+
+  if (!video.src || !video.duration) {
+    alert("Import a video first.");
+    return;
+  }
+
+  if (!video.captureStream) {
+    alert("Your browser does not support video recording export.");
+    return;
+  }
+
+  exportStream = video.captureStream();
+
+  const bitrate =
+    Number(document.getElementById("exportQuality").value);
+
+  exportChunks = [];
+
+  const mimeType = MediaRecorder.isTypeSupported(
+    "video/webm;codecs=vp9"
+  ) ? "video/webm;codecs=vp9" : "video/webm";
+
+  exportRecorder = new MediaRecorder(exportStream, {
+    mimeType: mimeType,
+    videoBitsPerSecond: bitrate
+  });
+
+  exportRecorder.ondataavailable = function(event) {
+    if (event.data.size > 0) {
+      exportChunks.push(event.data);
+    }
+  };
+
+  exportRecorder.onstop = function() {
+    const blob = new Blob(exportChunks, {
+      type: exportRecorder.mimeType
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "blaze-studio-export.webm";
+    link.click();
+
+    document.getElementById("exportStatus").textContent =
+      "Export finished. Your WebM download should begin.";
+
+    exportStream.getTracks().forEach(track => track.stop());
+  };
+
+  video.currentTime = 0;
+  video.play();
+
+  exportRecorder.start();
+
+  document.getElementById("exportStatus").textContent =
+    "Exporting video...";
+
+  video.onended = function() {
+    stopExport();
+  };
+}
+
+function stopExport() {
+  if (exportRecorder &&
+      exportRecorder.state === "recording") {
+    exportRecorder.stop();
+  }
+
+  const video = document.getElementById("videoPreview");
+  video.pause();
+}
+</script>
+
+<!-- END CHUNK 10 -->
+<!-- BLAZE STUDIO CHUNK 11 -->
+
+<div class="panel">
+  <h2>🛠️ Editing Toolbar</h2>
+
+  <div class="actions">
+    <button onclick="playVideo()">▶ Play</button>
+    <button onclick="pauseVideo()">⏸ Pause</button>
+    <button onclick="rewindVideo()">⏪ Rewind</button>
+    <button onclick="forwardVideo()">⏩ Forward</button>
+    <button onclick="splitMarker()">✂️ Split Marker</button>
+  </div>
+
+  <p id="toolbarStatus" class="muted">
+    Editing tools ready.
+  </p>
+</div>
+
+<style>
+.actions button {
+  flex: 1;
+  min-width: 90px;
+}
+
+.panel h2 {
+  color: #ff762e;
+}
+
+video {
+  outline: 1px solid #38343f;
+}
+</style>
+
+<script>
+function playVideo() {
+  document.getElementById("videoPreview").play();
+}
+
+function pauseVideo() {
+  document.getElementById("videoPreview").pause();
+}
+
+function rewindVideo() {
+  const video = document.getElementById("videoPreview");
+  video.currentTime = Math.max(0, video.currentTime - 5);
+}
+
+function forwardVideo() {
+  const video = document.getElementById("videoPreview");
+  video.currentTime = Math.min(
+    video.duration || 0,
+    video.currentTime + 5
+  );
+}
+
+function splitMarker() {
+  const video = document.getElementById("videoPreview");
+
+  if (!video.duration) {
+    alert("Import a video first.");
+    return;
+  }
+
+  document.getElementById("toolbarStatus").textContent =
+    "Split marker at " +
+    video.currentTime.toFixed(2) +
+    " seconds. Actual splitting requires a video editing engine.";
+}
+</script>
+
+<!-- END CHUNK 11 -->
+<!-- BLAZE STUDIO FINAL CHUNK -->
+
+<footer style="text-align:center;padding:25px;color:#aaa6b5">
+  <div style="color:#ff762e;font-weight:bold;font-size:18px">
+    🔥 BLAZE STUDIO
+  </div>
+  <p>Creative editing. Unlimited imagination.</p>
+  <p>Blaze Studio • 2026</p>
+</footer>
+
+</body>
+</html>
+<!-- END BLAZE STUDIO -->
