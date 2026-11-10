@@ -136,12 +136,7 @@ label {
       📁 Import Video
     </button>
 
-    <input id="videoInput"
-      type="file"
-      accept="video/*"
-      hidden
-      onchange="loadVideo(event)">
-  </div>
+    
 
   <p id="videoStatus" class="muted">
     No video imported. Choose a video from your gallery.
